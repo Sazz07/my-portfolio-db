@@ -11,9 +11,13 @@ const baseQuery = fetchBaseQuery({
   baseUrl: BASE_URL,
   credentials: 'include',
   prepareHeaders: (headers, { getState }) => {
-    const token = (getState() as RootState).auth.accessToken;
+    const state = getState() as RootState;
+    const token = state.auth?.accessToken;
+
     if (token) {
-      headers.set('authorization', `${token}`);
+      headers.set('authorization', `Bearer ${token}`);
+    } else {
+      headers.delete('authorization');
     }
     return headers;
   },
@@ -23,6 +27,28 @@ const baseQueryWithReauth = async (args: any, api: any, extraOptions: any) => {
   const release = await mutex.acquire();
 
   try {
+    const state = api.getState() as RootState;
+    const token = state.auth?.accessToken;
+
+    if (state.auth?.isAuthenticated && !token) {
+      const refreshResult = await baseQuery(
+        { url: '/auth/refresh-token', method: 'POST' },
+        api,
+        extraOptions
+      );
+
+      if (refreshResult?.data) {
+        const { accessToken } = refreshResult.data as { accessToken: string };
+
+        api.dispatch(
+          setCredentials({
+            accessToken,
+            user: state.auth?.user,
+          })
+        );
+      }
+    }
+
     let result = await baseQuery(args, api, extraOptions);
 
     // If we get a 401 Unauthorized response, try to refresh the token
@@ -35,9 +61,7 @@ const baseQueryWithReauth = async (args: any, api: any, extraOptions: any) => {
 
       if (refreshResult?.data) {
         const { accessToken } = refreshResult.data as { accessToken: string };
-        const state = api.getState() as RootState;
 
-        // Update auth state with new token
         api.dispatch(
           setCredentials({
             accessToken,
@@ -45,7 +69,6 @@ const baseQueryWithReauth = async (args: any, api: any, extraOptions: any) => {
           })
         );
 
-        // Retry the original query with new token
         result = await baseQuery(args, api, extraOptions);
       } else {
         api.dispatch(logOut());

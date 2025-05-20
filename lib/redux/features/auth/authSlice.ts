@@ -28,13 +28,14 @@ const authSlice = createSlice({
       action: PayloadAction<{ accessToken: string; user: User }>
     ) => {
       const { accessToken, user } = action.payload;
+
       state.accessToken = accessToken;
       state.user = user;
       state.isAuthenticated = true;
     },
     updateToken: (state, action: PayloadAction<string>) => {
       state.accessToken = action.payload;
-      // If we have a token but no user (edge case), try to extract user from token
+   
       if (!state.user && action.payload) {
         try {
           const decoded: any = jwtDecode(action.payload);
