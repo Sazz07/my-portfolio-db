@@ -1,14 +1,12 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useLoginMutation } from '@/lib/redux/features/auth/authApiSlice';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
+import { Mail, Lock, Loader2 } from 'lucide-react';
+import { FormWrapper, FormInput } from '@/components/form';
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email format'),
@@ -21,19 +19,7 @@ export default function LoginPage() {
   const router = useRouter();
   const [login, { isLoading }] = useLoginMutation();
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<LoginFormValues>({
-    resolver: zodResolver(loginSchema),
-    defaultValues: {
-      email: '',
-      password: '',
-    },
-  });
-
-  const onSubmit = async (data: LoginFormValues) => {
+  const handleSubmit = async (data: LoginFormValues) => {
     try {
       await login(data).unwrap();
       toast.success('Login successful');
@@ -55,49 +41,48 @@ export default function LoginPage() {
           </p>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className='mt-8 space-y-6'>
+        <FormWrapper
+          schema={loginSchema}
+          onSubmit={handleSubmit}
+          defaultValues={{
+            email: '',
+            password: '',
+          }}
+          className='mt-8 space-y-6'
+        >
           <div className='space-y-4'>
-            <div>
-              <Label htmlFor='email' className='mb-1'>
-                Email
-              </Label>
-              <Input
-                id='email'
-                type='email'
-                placeholder='your@email.com'
-                {...register('email')}
-                className={errors.email ? 'border-red-500' : ''}
-              />
-              {errors.email && (
-                <p className='mt-1 text-sm text-red-500'>
-                  {errors.email.message}
-                </p>
-              )}
-            </div>
+            <FormInput
+              name='email'
+              label='Email'
+              type='email'
+              placeholder='your@email.com'
+              icon={<Mail />}
+            />
 
-            <div>
-              <Label htmlFor='password' className='mb-1'>
-                Password
-              </Label>
-              <Input
-                id='password'
-                type='password'
-                placeholder='••••••••'
-                {...register('password')}
-                className={errors.password ? 'border-red-500' : ''}
-              />
-              {errors.password && (
-                <p className='mt-1 text-sm text-red-500'>
-                  {errors.password.message}
-                </p>
-              )}
-            </div>
+            <FormInput
+              name='password'
+              label='Password'
+              type='password'
+              placeholder='••••••••'
+              icon={<Lock />}
+            />
           </div>
 
-          <Button type='submit' className='w-full' disabled={isLoading}>
-            {isLoading ? 'Signing in...' : 'Sign in'}
+          <Button
+            type='submit'
+            className='w-full cursor-pointer'
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <span className='flex items-center gap-1'>
+                <Loader2 className='animate-spin' />
+                Signing in...
+              </span>
+            ) : (
+              'Sign in'
+            )}
           </Button>
-        </form>
+        </FormWrapper>
       </div>
     </div>
   );
