@@ -4,7 +4,7 @@ export type Project = {
   id: string;
   title: string;
   description: string;
-  image?: string;
+  images?: string[];
   liveUrl?: string;
   githubUrl?: string;
   status: 'ONGOING' | 'COMPLETED';
@@ -32,10 +32,25 @@ export const projectBaseApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getProjects: builder.query<Project[], void>({
       query: () => '/projects',
+      transformResponse: (response: {
+        data: Project[];
+        meta: any;
+        success: boolean;
+        message: string;
+      }) => {
+        return response.data || [];
+      },
       providesTags: ['Project'],
     }),
     getProject: builder.query<Project, string>({
       query: (id) => `/projects/${id}`,
+      transformResponse: (response: {
+        data: Project;
+        success: boolean;
+        message: string;
+      }) => {
+        return response.data;
+      },
       providesTags: (result, error, id) => [{ type: 'Project', id }],
     }),
     createProject: builder.mutation<Project, CreateProjectPayload>({
@@ -44,6 +59,13 @@ export const projectBaseApi = baseApi.injectEndpoints({
         method: 'POST',
         body: project,
       }),
+      transformResponse: (response: {
+        data: Project;
+        success: boolean;
+        message: string;
+      }) => {
+        return response.data;
+      },
       invalidatesTags: ['Project'],
     }),
     updateProject: builder.mutation<Project, UpdateProjectPayload>({
@@ -52,6 +74,13 @@ export const projectBaseApi = baseApi.injectEndpoints({
         method: 'PATCH',
         body: project,
       }),
+      transformResponse: (response: {
+        data: Project;
+        success: boolean;
+        message: string;
+      }) => {
+        return response.data;
+      },
       invalidatesTags: (result, error, { id }) => [{ type: 'Project', id }],
     }),
     deleteProject: builder.mutation<void, string>({
