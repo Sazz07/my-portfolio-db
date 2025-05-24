@@ -13,6 +13,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
+import { cn } from '@/lib/utils';
 
 type FormInputProps = {
   name: string;
@@ -47,7 +48,7 @@ export function FormInput({
           {label && <FormLabel htmlFor={name}>{label}</FormLabel>}
           <div className='relative'>
             {icon && (
-              <div className='absolute left-2 top-2 size-4 text-gray-500'>
+              <div className='absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground'>
                 {icon}
               </div>
             )}
@@ -63,7 +64,10 @@ export function FormInput({
                     : type
                 }
                 placeholder={placeholder}
-                className={icon ? 'pl-10' : ''}
+                className={cn(
+                  icon ? 'pl-10' : '',
+                  type === 'password' ? 'pr-10' : ''
+                )}
                 disabled={disabled}
               />
             </FormControl>
@@ -72,7 +76,7 @@ export function FormInput({
                 type='button'
                 variant='ghost'
                 size='icon'
-                className='absolute right-1 top-0.5 h-8 w-8'
+                className='absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7'
                 onClick={() => setShowPassword(!showPassword)}
               >
                 {showPassword ? (

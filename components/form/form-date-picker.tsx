@@ -21,7 +21,6 @@ type FormDatePickerProps = {
   label?: string;
   placeholder?: string;
   description?: string;
-  icon?: ReactNode;
   disabled?: boolean;
   className?: string;
 };
@@ -31,7 +30,6 @@ export function FormDatePicker({
   label,
   placeholder,
   description,
-  icon,
   disabled,
   className,
 }: FormDatePickerProps) {
@@ -45,22 +43,17 @@ export function FormDatePicker({
         <FormItem className={cn('flex flex-col', className)}>
           {label && <FormLabel>{label}</FormLabel>}
           <div className='relative'>
-            {icon && (
-              <div className='absolute left-3 top-3 z-10 h-4 w-4 text-muted-foreground'>
-                {icon}
-              </div>
-            )}
             <FormControl>
-              <div className={cn('relative', icon ? 'pl-10' : '')}>
+              <div className='relative'>
                 <ReactDatePicker
                   selected={field.value}
                   onChange={field.onChange}
                   disabled={disabled}
                   placeholderText={placeholder}
                   dateFormat='MMMM d, yyyy'
-                  customInput={<Input className={icon ? 'pl-10' : ''} />}
+                  customInput={<Input className='pr-10' />}
                 />
-                <CalendarIcon className='absolute right-3 top-3 h-4 w-4 text-muted-foreground' />
+                <CalendarIcon className='absolute right-3 top-2.5 h-4 w-4 text-muted-foreground pointer-events-none' />
               </div>
             </FormControl>
           </div>
