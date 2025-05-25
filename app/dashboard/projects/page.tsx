@@ -1,11 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { z } from 'zod';
 import { toast } from 'sonner';
-import { Plus, Loader2, Code } from 'lucide-react';
+import { Plus, Loader2, Code, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import {
   Card,
   CardContent,
@@ -30,6 +31,17 @@ import { useGetTechnologiesQuery } from '@/lib/redux/features/technology/technol
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ProjectCard } from '@/components/project-card';
+import { DeleteConfirmationDialog } from '@/components/delete-confirmation-dialog';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/pagination';
+import { TMeta } from '@/types/global.type';
 
 // Define form schema with Zod
 const formSchema = z.object({
@@ -50,6 +62,7 @@ const formSchema = z.object({
   technologies: z
     .array(z.string())
     .min(1, { message: 'Please select at least one technology' }),
+  status: z.enum(['ONGOING', 'COMPLETED']),
   images: z
     .array(z.any())
     .min(1, { message: 'Please upload at least one image' }),
@@ -57,18 +70,44 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
+const statusOptions = [
+  { value: 'ONGOING', label: 'Ongoing' },
+  { value: 'COMPLETED', label: 'Completed' },
+];
+
 export default function ProjectsPage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState('all');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(6);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [projectToDelete, setProjectToDelete] = useState<string | null>(null);
 
-  // Ensure projects is always an array
-  const { data: projectsData = [], isLoading: isLoadingProjects } =
-    useGetProjectsQuery();
+  // Query parameters for API call
+  const queryParams = {
+    searchTerm: searchTerm || undefined,
+    status: activeTab !== 'all' ? activeTab.toUpperCase() : undefined,
+    page,
+    limit,
+  };
 
-  const projects = Array.isArray(projectsData) ? projectsData : [];
-  console.log(projects);
+  const {
+    data: projectsResponse = {
+      data: [],
+      meta: { page: 1, limit: 6, total: 0, totalPage: 1 },
+    },
+    isLoading: isLoadingProjects,
+  } = useGetProjectsQuery(queryParams);
 
-  // Ensure technologies is always an array
+  const projects = projectsResponse.data || [];
+  const meta: TMeta = projectsResponse.meta || {
+    page: 1,
+    limit: 6,
+    total: 0,
+    totalPage: 1,
+  };
+
   const { data: technologiesData = [], isLoading: isLoadingTechnologies } =
     useGetTechnologiesQuery();
 
@@ -77,7 +116,11 @@ export default function ProjectsPage() {
   const [createProject, { isLoading: isCreating }] = useCreateProjectMutation();
   const [deleteProject, { isLoading: isDeleting }] = useDeleteProjectMutation();
 
-  // Now this will be safe
+  // Reset page when filters change
+  useEffect(() => {
+    setPage(1);
+  }, [searchTerm, activeTab]);
+
   const technologyOptions = technologies.map((tech) => ({
     value: tech.name,
     label: tech.name,
@@ -91,6 +134,7 @@ export default function ProjectsPage() {
         title: values.title,
         description: values.description,
         technologies: values.technologies,
+        status: values.status,
       };
 
       if (values.liveUrl) {
@@ -122,23 +166,104 @@ export default function ProjectsPage() {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (confirm('Are you sure you want to delete this project?')) {
-      try {
-        await deleteProject(id).unwrap();
-        toast.success('Project deleted successfully');
-      } catch (error) {
-        console.error('Failed to delete project:', error);
-        toast.error('Failed to delete project');
-      }
+  const openDeleteDialog = (id: string) => {
+    setProjectToDelete(id);
+    setDeleteDialogOpen(true);
+  };
+
+  const closeDeleteDialog = () => {
+    setDeleteDialogOpen(false);
+    setProjectToDelete(null);
+  };
+
+  const confirmDelete = async () => {
+    if (!projectToDelete) return;
+
+    try {
+      await deleteProject(projectToDelete).unwrap();
+      toast.success('Project deleted successfully');
+      closeDeleteDialog();
+    } catch (error) {
+      console.error('Failed to delete project:', error);
+      toast.error('Failed to delete project');
+      closeDeleteDialog();
     }
   };
 
-  const filteredProjects = Array.isArray(projects)
-    ? activeTab === 'all'
-      ? projects
-      : projects.filter((project) => project.status === activeTab.toUpperCase())
-    : [];
+  // Generate pagination items
+  const renderPaginationItems = () => {
+    const items = [];
+    const maxVisiblePages = 5;
+    const totalPages = meta.totalPage;
+
+    if (totalPages <= maxVisiblePages) {
+      // Show all pages if total pages are less than or equal to max visible pages
+      for (let i = 1; i <= totalPages; i++) {
+        items.push(
+          <PaginationItem key={i}>
+            <PaginationLink isActive={page === i} onClick={() => setPage(i)}>
+              {i}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    } else {
+      // Always show first page
+      items.push(
+        <PaginationItem key={1}>
+          <PaginationLink isActive={page === 1} onClick={() => setPage(1)}>
+            1
+          </PaginationLink>
+        </PaginationItem>
+      );
+
+      // Show ellipsis if current page is more than 3
+      if (page > 3) {
+        items.push(
+          <PaginationItem key='ellipsis-1'>
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      }
+
+      // Show pages around current page
+      const startPage = Math.max(2, page - 1);
+      const endPage = Math.min(totalPages - 1, page + 1);
+
+      for (let i = startPage; i <= endPage; i++) {
+        items.push(
+          <PaginationItem key={i}>
+            <PaginationLink isActive={page === i} onClick={() => setPage(i)}>
+              {i}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+
+      // Show ellipsis if current page is less than totalPages - 2
+      if (page < totalPages - 2) {
+        items.push(
+          <PaginationItem key='ellipsis-2'>
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      }
+
+      // Always show last page
+      items.push(
+        <PaginationItem key={totalPages}>
+          <PaginationLink
+            isActive={page === totalPages}
+            onClick={() => setPage(totalPages)}
+          >
+            {totalPages}
+          </PaginationLink>
+        </PaginationItem>
+      );
+    }
+
+    return items;
+  };
 
   return (
     <div className='space-y-6'>
@@ -155,6 +280,20 @@ export default function ProjectsPage() {
         </Button>
       </div>
 
+      {/* Search and filter section */}
+      <div className='flex flex-col sm:flex-row gap-4'>
+        <div className='relative flex-1'>
+          <Search className='absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground' />
+          <Input
+            type='search'
+            placeholder='Search projects...'
+            className='pl-8'
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+      </div>
+
       <Tabs defaultValue='all' value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
           <TabsTrigger value='all'>All</TabsTrigger>
@@ -166,27 +305,64 @@ export default function ProjectsPage() {
             <div className='flex justify-center py-10'>
               <Loader2 className='h-10 w-10 animate-spin text-primary' />
             </div>
-          ) : filteredProjects.length === 0 ? (
+          ) : projects.length === 0 ? (
             <div className='text-center py-10'>
               <Code className='h-10 w-10 mx-auto text-muted-foreground' />
               <h3 className='mt-4 text-lg font-medium'>No projects found</h3>
               <p className='text-muted-foreground mt-2'>
-                Get started by creating a new project.
+                {searchTerm
+                  ? 'Try a different search term.'
+                  : 'Get started by creating a new project.'}
               </p>
             </div>
           ) : (
-            <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
-              {filteredProjects.map((project) => (
-                <ProjectCard
-                  key={project.id}
-                  project={project}
-                  onDelete={() => handleDelete(project.id)}
-                  onEdit={() =>
-                    router.push(`/dashboard/projects/${project.id}/edit`)
-                  }
-                />
-              ))}
-            </div>
+            <>
+              <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
+                {projects.map((project) => (
+                  <ProjectCard
+                    key={project.id}
+                    project={project}
+                    onDelete={() => openDeleteDialog(project.id)}
+                    onEdit={() =>
+                      router.push(`/dashboard/projects/${project.id}/edit`)
+                    }
+                  />
+                ))}
+              </div>
+
+              {/* Pagination */}
+              {meta.totalPage > 1 && (
+                <Pagination className='mt-8'>
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious
+                        onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
+                        aria-disabled={page === 1}
+                        className={
+                          page === 1 ? 'pointer-events-none opacity-50' : ''
+                        }
+                      />
+                    </PaginationItem>
+
+                    {renderPaginationItems()}
+
+                    <PaginationItem>
+                      <PaginationNext
+                        onClick={() =>
+                          setPage((prev) => Math.min(prev + 1, meta.totalPage))
+                        }
+                        aria-disabled={page === meta.totalPage}
+                        className={
+                          page === meta.totalPage
+                            ? 'pointer-events-none opacity-50'
+                            : ''
+                        }
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
+              )}
+            </>
           )}
         </TabsContent>
       </Tabs>
@@ -208,6 +384,7 @@ export default function ProjectsPage() {
               liveUrl: '',
               githubUrl: '',
               technologies: [],
+              status: 'ONGOING',
               images: [],
             }}
             className='space-y-6'
@@ -239,15 +416,24 @@ export default function ProjectsPage() {
               />
             </div>
 
-            <FormSelect
-              name='technologies'
-              label='Technologies'
-              placeholder='Select technologies'
-              options={technologyOptions}
-              isMulti
-              isCreatable
-              description='Select or create technologies used in this project'
-            />
+            <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+              <FormSelect
+                name='technologies'
+                label='Technologies'
+                placeholder='Select technologies'
+                options={technologyOptions}
+                isMulti
+                isCreatable
+                description='Select or create technologies used in this project'
+              />
+              <FormSelect
+                name='status'
+                label='Status'
+                placeholder='Select project status'
+                options={statusOptions}
+                description='Current status of the project'
+              />
+            </div>
 
             <FormImageUpload
               name='images'
@@ -263,6 +449,15 @@ export default function ProjectsPage() {
           </FormWrapper>
         </CardContent>
       </Card>
+
+      <DeleteConfirmationDialog
+        isOpen={deleteDialogOpen}
+        onClose={closeDeleteDialog}
+        onConfirm={confirmDelete}
+        title='Delete Project'
+        description='Are you sure you want to delete this project? This action cannot be undone.'
+        isDeleting={isDeleting}
+      />
     </div>
   );
 }
