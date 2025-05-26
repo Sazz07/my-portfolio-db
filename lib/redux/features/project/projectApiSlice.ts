@@ -36,35 +36,44 @@ export type ProjectsResponse = {
 
 export const projectBaseApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
-    getProjects: builder.query<ProjectsResponse, { page?: number; limit?: number; searchTerm?: string; status?: string; sortBy?: string; sortOrder?: string }>(
+    getProjects: builder.query<
+      ProjectsResponse,
       {
-        query: (params) => {
-          const queryParams = new URLSearchParams();
-          
-          if (params.page) queryParams.append('page', params.page.toString());
-          if (params.limit) queryParams.append('limit', params.limit.toString());
-          if (params.searchTerm) queryParams.append('searchTerm', params.searchTerm);
-          if (params.status) queryParams.append('status', params.status);
-          if (params.sortBy) queryParams.append('sortBy', params.sortBy);
-          if (params.sortOrder) queryParams.append('sortOrder', params.sortOrder);
-          
-          const queryString = queryParams.toString();
-          return `/projects${queryString ? `?${queryString}` : ''}`;
-        },
-        transformResponse: (response: {
-          data: Project[];
-          meta: TMeta;
-          success: boolean;
-          message: string;
-        }) => {
-          return {
-            data: response.data || [],
-            meta: response.meta || { page: 1, limit: 10, total: 0, totalPage: 0 }
-          };
-        },
-        providesTags: ['Project'],
+        page?: number;
+        limit?: number;
+        searchTerm?: string;
+        status?: string;
+        sortBy?: string;
+        sortOrder?: string;
       }
-    ),
+    >({
+      query: (params) => {
+        const queryParams = new URLSearchParams();
+
+        if (params.page) queryParams.append('page', params.page.toString());
+        if (params.limit) queryParams.append('limit', params.limit.toString());
+        if (params.searchTerm)
+          queryParams.append('searchTerm', params.searchTerm);
+        if (params.status) queryParams.append('status', params.status);
+        if (params.sortBy) queryParams.append('sortBy', params.sortBy);
+        if (params.sortOrder) queryParams.append('sortOrder', params.sortOrder);
+
+        const queryString = queryParams.toString();
+        return `/projects${queryString ? `?${queryString}` : ''}`;
+      },
+      transformResponse: (response: {
+        data: Project[];
+        meta: TMeta;
+        success: boolean;
+        message: string;
+      }) => {
+        return {
+          data: response.data || [],
+          meta: response.meta || { page: 1, limit: 10, total: 0, totalPage: 0 },
+        };
+      },
+      providesTags: ['Project'],
+    }),
     getProject: builder.query<Project, string>({
       query: (id) => `/projects/${id}`,
       transformResponse: (response: {
@@ -92,11 +101,22 @@ export const projectBaseApi = baseApi.injectEndpoints({
       invalidatesTags: ['Project'],
     }),
     updateProject: builder.mutation<Project, UpdateProjectPayload>({
-      query: ({ id, ...project }) => ({
-        url: `/projects/${id}`,
-        method: 'PATCH',
-        body: project,
-      }),
+      query: (payload) => {
+        if (payload instanceof FormData) {
+          const id = payload.get('id');
+          return {
+            url: `/projects/${id}`,
+            method: 'PATCH',
+            body: payload,
+          };
+        }
+        const { id, ...project } = payload as Project;
+        return {
+          url: `/projects/${id}`,
+          method: 'PATCH',
+          body: project,
+        };
+      },
       transformResponse: (response: {
         data: Project;
         success: boolean;
@@ -104,7 +124,13 @@ export const projectBaseApi = baseApi.injectEndpoints({
       }) => {
         return response.data;
       },
-      invalidatesTags: (result, error, { id }) => [{ type: 'Project', id }],
+      invalidatesTags: (result, error, payload) => {
+        const id =
+          payload instanceof FormData
+            ? payload.get('id')?.toString()
+            : (payload as any).id;
+        return [{ type: 'Project', id }, { type: 'Project' }];
+      },
     }),
     deleteProject: builder.mutation<void, string>({
       query: (id) => ({

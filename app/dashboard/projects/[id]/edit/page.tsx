@@ -4,7 +4,7 @@ import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { z } from 'zod';
 import { toast } from 'sonner';
-import { Loader2, ArrowLeft } from 'lucide-react';
+import { Loader2, ArrowLeft, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -26,6 +26,8 @@ import {
   UpdateProjectPayload,
 } from '@/lib/redux/features/project/projectApiSlice';
 import { useGetTechnologiesQuery } from '@/lib/redux/features/technology/technologyApiSlice';
+import Image from 'next/image';
+import { Label } from '@/components/ui/label';
 
 // Define form schema with Zod
 const formSchema = z.object({
@@ -48,6 +50,7 @@ const formSchema = z.object({
     .min(1, { message: 'Please select at least one technology' }),
   status: z.enum(['ONGOING', 'COMPLETED']),
   images: z.array(z.any()).optional(),
+  imagesToRemove: z.array(z.string()).optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -82,6 +85,26 @@ export default function EditProjectPage({
     { value: 'COMPLETED', label: 'Completed' },
   ];
 
+  const [existingImages, setExistingImages] = useState<string[]>([]);
+  const [imagesToRemove, setImagesToRemove] = useState<string[]>([]);
+
+  // Load existing images when project data is available
+  useEffect(() => {
+    if (project?.images && project.images.length > 0) {
+      // Clean up the image URLs (remove any extra quotes)
+      const cleanedImages = project.images.map((img) =>
+        img.replace(/\s+/g, '').replace(/"/g, '')
+      );
+      setExistingImages(
+        cleanedImages.filter((img) => !imagesToRemove.includes(img))
+      );
+    }
+  }, [project, imagesToRemove]);
+
+  const handleRemoveExistingImage = (imageUrl: string) => {
+    setImagesToRemove((prev) => [...prev, imageUrl]);
+  };
+
   const handleSubmit = async (values: FormValues) => {
     try {
       const formData = new FormData();
@@ -106,6 +129,11 @@ export default function EditProjectPage({
         formData.append('githubUrl', values.githubUrl);
       }
 
+      // Add images to remove
+      if (imagesToRemove.length > 0) {
+        formData.append('imagesToRemove', JSON.stringify(imagesToRemove));
+      }
+
       // Handle image uploads
       if (values.images && values.images.length > 0) {
         values.images.forEach((image) => {
@@ -116,6 +144,7 @@ export default function EditProjectPage({
       // Send the FormData directly
       await updateProject(formData as unknown as UpdateProjectPayload).unwrap();
       toast.success('Project updated successfully');
+
       router.push('/dashboard/projects');
     } catch (error) {
       console.error('Failed to update project:', error);
@@ -176,6 +205,7 @@ export default function EditProjectPage({
               technologies: project.technologies || [],
               status: project.status,
               images: [],
+              imagesToRemove: [],
             }}
             className='space-y-6'
           >
@@ -224,9 +254,40 @@ export default function EditProjectPage({
               description='Current status of the project'
             />
 
+            {/* Display existing images with remove buttons */}
+            {existingImages.length > 0 && (
+              <div className='space-y-2'>
+                <Label>Existing Images</Label>
+                <div className='flex flex-wrap gap-4'>
+                  {existingImages.map((img, index) => (
+                    <div
+                      key={`existing-${index}`}
+                      className='relative w-32 h-32'
+                    >
+                      <Image
+                        src={img}
+                        alt={`Project image ${index + 1}`}
+                        fill
+                        className='object-cover rounded-md'
+                      />
+                      <Button
+                        type='button'
+                        size='icon'
+                        variant='destructive'
+                        className='absolute top-1 right-1 h-6 w-6'
+                        onClick={() => handleRemoveExistingImage(img)}
+                      >
+                        <X className='h-3 w-3' />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <FormImageUpload
               name='images'
-              label='Project Images'
+              label='Add New Images'
               maxFiles={5}
               multiple
             />
