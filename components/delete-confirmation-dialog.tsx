@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button';
 
 type DeleteConfirmationDialogProps = {
   isOpen: boolean;
-  onClose: () => void;
+  onClose: (open: boolean) => void;
   onConfirm: () => void;
   title: string;
   description: string;
@@ -35,7 +35,11 @@ export function DeleteConfirmationDialog({
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
         <DialogFooter>
-          <Button variant='outline' onClick={onClose} disabled={isDeleting}>
+          <Button
+            variant='outline'
+            onClick={() => onClose(false)}
+            disabled={isDeleting}
+          >
             Cancel
           </Button>
           <Button
