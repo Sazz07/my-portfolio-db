@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, use } from 'react';
-import { useRouter } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { z } from 'zod';
 import { toast } from 'sonner';
 import { Loader2, ArrowLeft, X } from 'lucide-react';
@@ -55,22 +55,12 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-type PageParams = {
-  id: string;
-};
-
-export default function EditProjectPage({
-  params,
-}: {
-  params: PageParams | Promise<PageParams>;
-}) {
+export default function EditProjectPage() {
   const router = useRouter();
-  const unwrappedParams = use(params as Promise<PageParams>);
-  const id = unwrappedParams.id;
+  const { id } = useParams<{ id: string }>();
 
   const { data: project, isLoading: isLoadingProject } = useGetProjectQuery(id);
-  const { data: technologiesData = [], isLoading: isLoadingTechnologies } =
-    useGetTechnologiesQuery();
+  const { data: technologiesData = [] } = useGetTechnologiesQuery();
   const [updateProject, { isLoading: isUpdating }] = useUpdateProjectMutation();
 
   const technologies = Array.isArray(technologiesData) ? technologiesData : [];

@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { z } from 'zod';
 import { toast } from 'sonner';
@@ -54,8 +53,7 @@ export default function CreateBlogPage() {
   const [createBlog, { isLoading: isCreatingBlogLoading }] =
     useCreateBlogMutation();
 
-  const { data: blogCategories, isLoading: isBlogCategoriesLoading } =
-    useGetBlogsCategoriesQuery(undefined);
+  const { data: blogCategories } = useGetBlogsCategoriesQuery(undefined);
 
   const categoriesOption =
     blogCategories.length > 0

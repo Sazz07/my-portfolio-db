@@ -4,13 +4,13 @@ import storage from 'redux-persist/lib/storage';
 // Create a no-op storage object for SSR
 const createNoopStorage = () => {
   return {
-    getItem(_key: string) {
+    getItem() {
       return Promise.resolve(null);
     },
-    setItem(_key: string, value: string) {
+    setItem(value: string) {
       return Promise.resolve(value);
     },
-    removeItem(_key: string) {
+    removeItem() {
       return Promise.resolve();
     },
   };

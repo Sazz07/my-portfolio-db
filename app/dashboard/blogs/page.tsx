@@ -2,13 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { z } from 'zod';
 import { toast } from 'sonner';
 import { Plus, Loader2, FileText, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DeleteConfirmationDialog } from '@/components/delete-confirmation-dialog';
 import {
   Pagination,
@@ -24,6 +23,7 @@ import { TMeta } from '@/types/global.type';
 import {
   useGetBlogsQuery,
   useDeleteBlogMutation,
+  Blog,
 } from '@/lib/redux/features/blog/blogApiSlice';
 import { BlogCard } from '@/components/blog-card';
 
@@ -32,7 +32,7 @@ export default function BlogsPage() {
   const [activeTab, setActiveTab] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(6);
+  const [limit] = useState(6);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [blogToDelete, setBlogToDelete] = useState<string | null>(null);
 
@@ -88,7 +88,7 @@ export default function BlogsPage() {
       toast.success('Blog deleted successfully');
       setDeleteDialogOpen(false);
       setBlogToDelete(null);
-    } catch (error) {
+    } catch {
       toast.error('Failed to delete blog');
     }
   };
@@ -200,7 +200,7 @@ export default function BlogsPage() {
       ) : blogs.length > 0 ? (
         <>
           <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6'>
-            {blogs.map((blog) => (
+            {blogs.map((blog: Blog) => (
               <BlogCard
                 key={blog.id}
                 blog={blog}

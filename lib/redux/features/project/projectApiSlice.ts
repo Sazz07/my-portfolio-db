@@ -1,5 +1,5 @@
 import { baseApi } from '../../api/baseApi';
-import { TMeta, TQueryParam } from '@/types/global.type';
+import { TMeta } from '@/types/global.type';
 
 export type Project = {
   id: string;
@@ -128,7 +128,7 @@ export const projectBaseApi = baseApi.injectEndpoints({
         const id =
           payload instanceof FormData
             ? payload.get('id')?.toString()
-            : (payload as any).id;
+            : payload.id;
         return [{ type: 'Project', id }, { type: 'Project' }];
       },
     }),

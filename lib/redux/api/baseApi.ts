@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import { RootState } from '../store';
 import { setCredentials, logOut } from '../features/auth/authSlice';
@@ -96,5 +97,5 @@ export const baseApi = createApi({
     'Technology',
     'Blog-Category',
   ],
-  endpoints: (builder) => ({}),
+  endpoints: () => ({}),
 });

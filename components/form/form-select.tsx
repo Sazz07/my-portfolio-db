@@ -54,7 +54,7 @@ export function FormSelect({
     <FormField
       control={control}
       name={name}
-      render={({ field }) => (
+      render={() => (
         <FormItem className={className}>
           {label && <FormLabel>{label}</FormLabel>}
           <FormControl>

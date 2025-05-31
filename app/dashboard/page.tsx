@@ -34,7 +34,7 @@ const stats = [
   {
     name: 'Education',
     icon: GraduationCap,
-    href: '/dashboard/education',
+    href: '/dashboard/educations',
     description: 'Edit your educational background',
   },
   {

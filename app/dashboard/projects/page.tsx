@@ -80,7 +80,7 @@ export default function ProjectsPage() {
   const [activeTab, setActiveTab] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(6);
+  const [limit] = useState(6);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [projectToDelete, setProjectToDelete] = useState<string | null>(null);
 
@@ -108,8 +108,7 @@ export default function ProjectsPage() {
     totalPage: 1,
   };
 
-  const { data: technologiesData = [], isLoading: isLoadingTechnologies } =
-    useGetTechnologiesQuery();
+  const { data: technologiesData = [] } = useGetTechnologiesQuery();
 
   const technologies = Array.isArray(technologiesData) ? technologiesData : [];
 

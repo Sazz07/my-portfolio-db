@@ -47,6 +47,7 @@ export function FormTextarea({
               placeholder={placeholder}
               rows={rows}
               disabled={disabled}
+              className='bg-white'
             />
           </FormControl>
           {description && <FormDescription>{description}</FormDescription>}

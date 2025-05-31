@@ -4,7 +4,6 @@ import { ReactNode } from 'react';
 import { useFormContext } from 'react-hook-form';
 import ReactDatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
-import { CalendarIcon } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import {
   FormControl,
@@ -23,6 +22,14 @@ type FormDatePickerProps = {
   description?: string;
   disabled?: boolean;
   className?: string;
+  inputClassName?: string;
+  containerClassName?: string;
+  dateFormat?: string;
+  showTimeSelect?: boolean;
+  minDate?: Date;
+  maxDate?: Date;
+  icon?: ReactNode;
+  size?: 'default' | 'sm' | 'lg';
 };
 
 export function FormDatePicker({
@@ -32,8 +39,22 @@ export function FormDatePicker({
   description,
   disabled,
   className,
+  inputClassName,
+  containerClassName,
+  dateFormat = 'MMMM d, yyyy',
+  showTimeSelect = false,
+  minDate,
+  maxDate,
+  icon,
+  size = 'default',
 }: FormDatePickerProps) {
   const { control } = useFormContext();
+
+  const sizeClasses = {
+    sm: 'h-8 text-xs',
+    default: 'h-10 text-sm',
+    lg: 'h-12 text-base py-3',
+  };
 
   return (
     <FormField
@@ -42,7 +63,7 @@ export function FormDatePicker({
       render={({ field }) => (
         <FormItem className={cn('flex flex-col', className)}>
           {label && <FormLabel>{label}</FormLabel>}
-          <div className='relative'>
+          <div className={cn('relative', containerClassName)}>
             <FormControl>
               <div className='relative'>
                 <ReactDatePicker
@@ -50,10 +71,27 @@ export function FormDatePicker({
                   onChange={field.onChange}
                   disabled={disabled}
                   placeholderText={placeholder}
-                  dateFormat='MMMM d, yyyy'
-                  customInput={<Input className='pr-10' />}
+                  dateFormat={dateFormat}
+                  showTimeSelect={showTimeSelect}
+                  minDate={minDate}
+                  maxDate={maxDate}
+                  customInput={
+                    <Input
+                      className={cn(
+                        'pr-10',
+                        icon && 'pl-10',
+                        sizeClasses[size],
+                        inputClassName
+                      )}
+                    />
+                  }
                 />
-                <CalendarIcon className='absolute right-3 top-2.5 h-4 w-4 text-muted-foreground pointer-events-none' />
+                {icon && (
+                  <div className='absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground'>
+                    {icon}
+                  </div>
+                )}
+                {/* <CalendarIcon className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" /> */}
               </div>
             </FormControl>
           </div>

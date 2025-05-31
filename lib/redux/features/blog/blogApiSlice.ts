@@ -25,7 +25,7 @@ export type UpdateBlogPayload = FormData;
 
 export const blogApiSlice = baseApi.injectEndpoints({
   endpoints: (builder) => ({
-    getBlogs: builder.query<BlogsResponse, any>({
+    getBlogs: builder.query({
       query: (params) => ({
         url: '/blogs',
         params,

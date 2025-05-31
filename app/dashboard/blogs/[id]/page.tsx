@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, use } from 'react';
-import { useRouter } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { z } from 'zod';
 import { toast } from 'sonner';
 import { Loader2, ArrowLeft, X } from 'lucide-react';
@@ -46,23 +46,14 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-type PageParams = {
-  id: string;
-};
-
 const statusOptions = [
   { value: 'DRAFT', label: 'Draft' },
   { value: 'PUBLISHED', label: 'Published' },
 ];
 
-export default function EditBlogPage({
-  params,
-}: {
-  params: PageParams | Promise<PageParams>;
-}) {
+export default function EditBlogPage() {
   const router = useRouter();
-  const unwrappedParams = use(params as Promise<PageParams>);
-  const id = unwrappedParams.id;
+  const { id } = useParams<{ id: string }>();
 
   const { data: blog, isLoading: isLoadingBlog } = useGetBlogQuery(id);
 

@@ -15,7 +15,7 @@ export const authApiSlice = baseApi.injectEndpoints({
 
           const { accessToken, user } = responseData.data;
           dispatch(setCredentials({ accessToken, user }));
-        } catch (error) {
+        } catch {
           // Handle error if needed
         }
       },
@@ -29,7 +29,7 @@ export const authApiSlice = baseApi.injectEndpoints({
         try {
           await queryFulfilled;
           dispatch(logOut());
-        } catch (error) {
+        } catch {
           // Handle error if needed
         }
       },

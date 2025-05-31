@@ -1,14 +1,19 @@
+import { TResponseRedux } from '@/types/global.type';
 import { baseApi } from '../../api/baseApi';
 
 export type Education = {
   id: string;
   institution: string;
   degree: string;
-  field: string;
+  fieldOfStudy: string;
+  location?: string;
   startDate: string;
   endDate?: string;
-  description?: string;
-  userId: string;
+  isCurrent: boolean;
+  grade?: string;
+  activities?: string;
+  description?: string[];
+  profileId: string;
   createdAt: string;
   updatedAt: string;
 };
@@ -16,10 +21,14 @@ export type Education = {
 export type CreateEducationPayload = {
   institution: string;
   degree: string;
-  field: string;
+  fieldOfStudy: string;
+  location?: string;
   startDate: string;
   endDate?: string;
-  description?: string;
+  isCurrent: boolean;
+  grade?: string;
+  activities?: string;
+  description?: string[];
 };
 
 export type UpdateEducationPayload = Partial<CreateEducationPayload> & {
@@ -30,9 +39,11 @@ export const educationBaseApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getEducations: builder.query<Education[], void>({
       query: () => '/educations',
+      transformResponse: (response: TResponseRedux<Education[]>) =>
+        response.data || [],
       providesTags: ['Education'],
     }),
-    getEducation: builder.query<Education, string>({
+    getEducation: builder.query({
       query: (id) => `/educations/${id}`,
       providesTags: (result, error, id) => [{ type: 'Education', id }],
     }),

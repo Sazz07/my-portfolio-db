@@ -35,10 +35,14 @@ const authSlice = createSlice({
     },
     updateToken: (state, action: PayloadAction<string>) => {
       state.accessToken = action.payload;
-   
+
       if (!state.user && action.payload) {
         try {
-          const decoded: any = jwtDecode(action.payload);
+          const decoded: {
+            userId: string;
+            email: string;
+            role: string;
+          } = jwtDecode(action.payload);
           if (decoded) {
             state.user = {
               id: decoded.userId,

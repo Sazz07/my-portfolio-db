@@ -24,6 +24,7 @@ export default function LoginPage() {
       await login(data).unwrap();
       toast.success('Login successful');
       router.push('/dashboard');
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       toast.error(error?.data?.message || 'Login failed');
     }

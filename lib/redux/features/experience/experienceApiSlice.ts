@@ -1,25 +1,37 @@
+import { TResponseRedux } from '@/types/global.type';
 import { baseApi } from '../../api/baseApi';
+
+export type TEmploymentType =
+  | 'FULL_TIME'
+  | 'PART_TIME'
+  | 'CONTRACT'
+  | 'INTERNSHIP'
+  | 'FREELANCE';
 
 export type Experience = {
   id: string;
+  title: string;
   company: string;
-  position: string;
+  location?: string;
+  type: TEmploymentType;
   startDate: string;
   endDate?: string;
-  description?: string;
-  responsibilities: string[];
-  userId: string;
+  isCurrent: boolean;
+  description?: string[];
+  profileId: string;
   createdAt: string;
   updatedAt: string;
 };
 
 export type CreateExperiencePayload = {
+  title: string;
   company: string;
-  position: string;
+  location?: string;
+  type: TEmploymentType;
   startDate: string;
   endDate?: string;
-  description?: string;
-  responsibilities: string[];
+  isCurrent: boolean;
+  description?: string[];
 };
 
 export type UpdateExperiencePayload = Partial<CreateExperiencePayload> & {
@@ -30,9 +42,11 @@ export const experienceBaseApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getExperiences: builder.query<Experience[], void>({
       query: () => '/experiences',
+      transformResponse: (response: TResponseRedux<Experience[]>) =>
+        response.data || [],
       providesTags: ['Experience'],
     }),
-    getExperience: builder.query<Experience, string>({
+    getExperience: builder.query({
       query: (id) => `/experiences/${id}`,
       providesTags: (result, error, id) => [{ type: 'Experience', id }],
     }),

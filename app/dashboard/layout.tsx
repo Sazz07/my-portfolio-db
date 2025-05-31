@@ -22,7 +22,6 @@ import {
   PenTool,
   Info,
   Menu,
-  X,
 } from 'lucide-react';
 
 const navItems = [
@@ -30,7 +29,7 @@ const navItems = [
   { name: 'About', href: '/dashboard/about', icon: Info },
   { name: 'Projects', href: '/dashboard/projects', icon: Code },
   { name: 'Experiences', href: '/dashboard/experiences', icon: Briefcase },
-  { name: 'Education', href: '/dashboard/education', icon: GraduationCap },
+  { name: 'Education', href: '/dashboard/educations', icon: GraduationCap },
   { name: 'Skills', href: '/dashboard/skills', icon: PenTool },
   { name: 'Blogs', href: '/dashboard/blogs', icon: FileText },
   { name: 'Contacts', href: '/dashboard/contacts', icon: MessageSquare },
@@ -63,7 +62,7 @@ export default function DashboardLayout({
       await logout(undefined).unwrap();
       toast.success('Logged out successfully');
       router.push('/login');
-    } catch (error) {
+    } catch {
       toast.error('Failed to logout');
     }
   };

@@ -1,5 +1,5 @@
 import Image from 'next/image';
-import { Edit, Trash2, Calendar, Tag } from 'lucide-react';
+import { Edit, Trash2, Calendar } from 'lucide-react';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
