@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { z } from 'zod';
 import { toast } from 'sonner';
+import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -33,6 +34,7 @@ type AboutFormProps = {
 
 export function AboutForm({ about }: AboutFormProps) {
   const router = useRouter();
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
 
   const [createAbout, { isLoading: isCreating }] = useCreateAboutMutation();
   const [updateAbout, { isLoading: isUpdating }] = useUpdateAboutMutation();
@@ -49,14 +51,26 @@ export function AboutForm({ about }: AboutFormProps) {
 
   const onSubmit = async (values: FormValues) => {
     try {
+      const formData = new FormData();
+      formData.append('title', values.title);
+      formData.append('description', values.description);
+
+      if (values.resumeUrl) {
+        formData.append('resumeUrl', values.resumeUrl);
+      }
+
+      if (selectedImage) {
+        formData.append('image', selectedImage);
+      } else if (values.image) {
+        formData.append('image', values.image);
+      }
+
       if (isEditing && about) {
-        await updateAbout({
-          id: about.id,
-          ...values,
-        }).unwrap();
+        formData.append('id', about.id);
+        await updateAbout(formData).unwrap();
         toast.success('About information updated successfully');
       } else {
-        await createAbout(values).unwrap();
+        await createAbout(formData).unwrap();
         toast.success('About information created successfully');
       }
 
@@ -68,6 +82,10 @@ export function AboutForm({ about }: AboutFormProps) {
           : 'Failed to create about information'
       );
     }
+  };
+
+  const handleImageChange = (file: File | null) => {
+    setSelectedImage(file);
   };
 
   return (
@@ -94,6 +112,8 @@ export function AboutForm({ about }: AboutFormProps) {
         name='image'
         label='Profile Image'
         disabled={isLoading}
+        onFileChange={handleImageChange}
+        existingImage={about?.image}
       />
 
       <FormInput

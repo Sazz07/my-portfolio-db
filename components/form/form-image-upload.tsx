@@ -19,6 +19,8 @@ interface FormImageUploadProps {
   required?: boolean;
   multiple?: boolean;
   maxFiles?: number;
+  onFileChange?: (file: File | null) => void;
+  existingImage?: string;
 }
 
 export function FormImageUpload({
@@ -32,12 +34,16 @@ export function FormImageUpload({
   required = false,
   multiple = false,
   maxFiles = 5,
+  onFileChange,
+  existingImage,
 }: FormImageUploadProps) {
-  // Initialize previews based on defaultValue
+  // Initialize previews based on defaultValue or existingImage
   const initialPreviews = Array.isArray(defaultValue)
     ? defaultValue
     : defaultValue
     ? [defaultValue]
+    : existingImage
+    ? [existingImage]
     : [];
 
   const [previews, setPreviews] = useState<string[]>(initialPreviews);
@@ -90,6 +96,11 @@ export function FormImageUpload({
           ? [...value, ...newFiles]
           : newFiles;
         onChange(updatedFiles);
+
+        // Call onFileChange if provided (for backward compatibility)
+        if (onFileChange && newFiles.length > 0) {
+          onFileChange(newFiles[0]);
+        }
       }
       // For single file
       else {
@@ -107,9 +118,14 @@ export function FormImageUpload({
           onChange(file); // Pass the file to form controller
         };
         reader.readAsDataURL(file);
+
+        // Call onFileChange if provided
+        if (onFileChange) {
+          onFileChange(file);
+        }
       }
     },
-    [onChange, maxSizeInMB, multiple, maxFiles, previews, value]
+    [onChange, maxSizeInMB, multiple, maxFiles, previews, value, onFileChange]
   );
 
   const handleRemove = useCallback(
@@ -128,9 +144,14 @@ export function FormImageUpload({
         // For single file, just clear everything
         setPreviews([]);
         onChange(null);
+
+        // Call onFileChange if provided
+        if (onFileChange) {
+          onFileChange(null);
+        }
       }
     },
-    [onChange, multiple, previews, value]
+    [onChange, multiple, previews, value, onFileChange]
   );
 
   return (
