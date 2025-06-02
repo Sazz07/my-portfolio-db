@@ -1,3 +1,4 @@
+import { TResponseRedux } from '@/types/global.type';
 import { baseApi } from '../../api/baseApi';
 
 export type Contact = {
@@ -6,7 +7,7 @@ export type Contact = {
   email: string;
   subject: string;
   message: string;
-  userId: string;
+  profileId: string;
   createdAt: string;
   updatedAt: string;
 };
@@ -26,6 +27,8 @@ export const contactBaseApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getContacts: builder.query<Contact[], void>({
       query: () => '/contacts',
+      transformResponse: (response: TResponseRedux<Contact[]>) =>
+        response.data || [],
       providesTags: ['Contact'],
     }),
     getContact: builder.query<Contact, string>({

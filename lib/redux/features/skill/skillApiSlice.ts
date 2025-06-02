@@ -1,11 +1,11 @@
+import { TResponseRedux } from '@/types/global.type';
 import { baseApi } from '../../api/baseApi';
 
 export type Skill = {
   id: string;
   name: string;
-  level: number;
-  category: string;
-  userId: string;
+  proficiency: number;
+  profileId: string;
   createdAt: string;
   updatedAt: string;
 };
@@ -22,15 +22,17 @@ export type UpdateSkillPayload = Partial<CreateSkillPayload> & {
 
 export const skillBaseApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
-    getSkills: builder.query<Skill[], void>({
+    getSkills: builder.query({
       query: () => '/skills',
+      transformResponse: (response: TResponseRedux<Skill[]>) =>
+        response.data || [],
       providesTags: ['Skill'],
     }),
-    getSkill: builder.query<Skill, string>({
+    getSkill: builder.query({
       query: (id) => `/skills/${id}`,
       providesTags: (result, error, id) => [{ type: 'Skill', id }],
     }),
-    createSkill: builder.mutation<Skill, CreateSkillPayload>({
+    createSkill: builder.mutation({
       query: (skill) => ({
         url: '/skills',
         method: 'POST',
@@ -38,7 +40,7 @@ export const skillBaseApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ['Skill'],
     }),
-    updateSkill: builder.mutation<Skill, UpdateSkillPayload>({
+    updateSkill: builder.mutation({
       query: ({ id, ...skill }) => ({
         url: `/skills/${id}`,
         method: 'PATCH',
@@ -46,7 +48,7 @@ export const skillBaseApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: (result, error, { id }) => [{ type: 'Skill', id }],
     }),
-    deleteSkill: builder.mutation<void, string>({
+    deleteSkill: builder.mutation({
       query: (id) => ({
         url: `/skills/${id}`,
         method: 'DELETE',
