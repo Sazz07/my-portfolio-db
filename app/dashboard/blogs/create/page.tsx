@@ -46,6 +46,7 @@ type FormValues = z.infer<typeof formSchema>;
 const statusOptions = [
   { value: 'DRAFT', label: 'Draft' },
   { value: 'PUBLISHED', label: 'Published' },
+  { value: 'ARCHIVED', label: 'Archived' },
 ];
 
 export default function CreateBlogPage() {
@@ -56,7 +57,7 @@ export default function CreateBlogPage() {
   const { data: blogCategories } = useGetBlogsCategoriesQuery(undefined);
 
   const categoriesOption =
-    blogCategories.length > 0
+    blogCategories && blogCategories.length > 0
       ? blogCategories.map((category: TBlogCategory) => ({
           value: category.id,
           label: category.name,

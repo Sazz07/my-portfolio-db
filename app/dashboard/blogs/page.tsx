@@ -179,6 +179,7 @@ export default function BlogsPage() {
             <TabsTrigger value='all'>All</TabsTrigger>
             <TabsTrigger value='published'>Published</TabsTrigger>
             <TabsTrigger value='draft'>Drafts</TabsTrigger>
+            <TabsTrigger value='archived'>Archived</TabsTrigger>
           </TabsList>
         </Tabs>
 

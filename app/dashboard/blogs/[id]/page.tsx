@@ -117,12 +117,10 @@ export default function EditBlogPage() {
     }
   };
 
-  // Replace the loading state with:
   if (isLoadingBlog) {
     return <Loading fullScreen text='Loading blog...' />;
   }
 
-  // Replace the empty state with:
   if (!blog) {
     return (
       <EmptyState
