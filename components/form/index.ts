@@ -6,3 +6,4 @@ export * from './form-textarea';
 export * from './form-date-picker';
 export * from './form-image-upload';
 export * from './form-rich-editor';
+export * from './form-featured-image-selector';

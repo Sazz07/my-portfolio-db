@@ -15,9 +15,9 @@ export function ProjectCard({ project, onEdit, onDelete }: ProjectCardProps) {
   return (
     <Card className='overflow-hidden h-full flex flex-col'>
       <div className='relative h-48 w-full'>
-        {project.images && project.images.length > 0 ? (
+        {project.featuredImage && project.images.length > 0 ? (
           <Image
-            src={project.images[0]}
+            src={project?.featuredImage}
             alt={project.title}
             fill
             className='object-cover'

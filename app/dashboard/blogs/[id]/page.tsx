@@ -21,6 +21,7 @@ import {
   FormSelect,
   FormRichEditor,
   FormImageUpload,
+  FormFeaturedImageSelector,
 } from '@/components/form';
 import {
   useGetBlogQuery,
@@ -42,6 +43,7 @@ const formSchema = z.object({
   status: z.enum(['DRAFT', 'PUBLISHED', 'ARCHIVED']),
   images: z.array(z.any()).optional(),
   imagesToRemove: z.array(z.string()).optional(),
+  featuredImage: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -95,6 +97,11 @@ export default function EditBlogPage() {
 
       // Handle tags as JSON string
       formData.append('tags', JSON.stringify(values.tags));
+
+      // Add featured image if selected
+      if (values.featuredImage) {
+        formData.append('featuredImage', values.featuredImage);
+      }
 
       // Add images to remove
       if (imagesToRemove.length > 0) {
@@ -166,6 +173,7 @@ export default function EditBlogPage() {
               status: blog.status || 'DRAFT',
               images: [],
               imagesToRemove: [],
+              featuredImage: blog.featuredImage || '',
             }}
             className='space-y-6'
           >
@@ -247,6 +255,13 @@ export default function EditBlogPage() {
               label='Add New Images'
               maxFiles={5}
               multiple
+            />
+
+            <FormFeaturedImageSelector
+              name='featuredImage'
+              label='Featured Image'
+              existingImages={existingImages}
+              currentFeaturedImage={blog.featuredImage}
             />
 
             <div className='flex justify-end gap-4'>

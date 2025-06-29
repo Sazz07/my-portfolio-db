@@ -5,6 +5,7 @@ export type Project = {
   id: string;
   title: string;
   description: string;
+  featuredImage?: string | null;
   images: string[];
   liveUrl?: string;
   githubUrl?: string;

@@ -19,6 +19,7 @@ import {
   FormSelect,
   FormTextarea,
   FormImageUpload,
+  FormFeaturedImageSelector,
 } from '@/components/form';
 import {
   useGetProjectQuery,
@@ -51,6 +52,7 @@ const formSchema = z.object({
   status: z.enum(['ONGOING', 'COMPLETED']),
   images: z.array(z.any()).optional(),
   imagesToRemove: z.array(z.string()).optional(),
+  featuredImage: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -117,6 +119,11 @@ export default function EditProjectPage() {
 
       if (values.githubUrl) {
         formData.append('githubUrl', values.githubUrl);
+      }
+
+      // Add featured image if selected
+      if (values.featuredImage) {
+        formData.append('featuredImage', values.featuredImage);
       }
 
       // Add images to remove
@@ -196,6 +203,7 @@ export default function EditProjectPage() {
               status: project.status,
               images: [],
               imagesToRemove: [],
+              featuredImage: project.featuredImage || '',
             }}
             className='space-y-6'
           >
@@ -280,6 +288,13 @@ export default function EditProjectPage() {
               label='Add New Images'
               maxFiles={5}
               multiple
+            />
+
+            <FormFeaturedImageSelector
+              name='featuredImage'
+              label='Featured Image'
+              existingImages={existingImages}
+              currentFeaturedImage={project.featuredImage}
             />
 
             <div className='flex justify-end gap-4'>
