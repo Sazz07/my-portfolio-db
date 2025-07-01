@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Plus, Pencil, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { skipToken } from '@reduxjs/toolkit/query';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -18,19 +19,25 @@ import { Separator } from '@/components/ui/separator';
 import { DeleteConfirmationDialog } from '@/components/delete-confirmation-dialog';
 import { Loading } from '@/components/ui/loading';
 import { EmptyState } from '@/components/ui/empty-state';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 
 import {
   useGetSkillsQuery,
   useDeleteSkillMutation,
+  useGetSkillCategoriesQuery,
+  SkillCategory,
 } from '@/lib/redux/features/skill/skillApiSlice';
 
 export default function SkillsPage() {
   const router = useRouter();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [skillToDelete, setSkillToDelete] = useState<string | null>(null);
+  const [activeCategory, setActiveCategory] = useState<string>('all');
 
-  const { data: skills = [], isLoading } = useGetSkillsQuery(undefined);
-
+  const { data: categories = [], isLoading: isLoadingCategories } =
+    useGetSkillCategoriesQuery();
+  const { data: allSkills = [], isLoading: isLoadingAll } =
+    useGetSkillsQuery(undefined);
   const [deleteSkill, { isLoading: isDeleting }] = useDeleteSkillMutation();
 
   const handleCreateClick = () => {
@@ -48,7 +55,6 @@ export default function SkillsPage() {
 
   const handleDeleteConfirm = async () => {
     if (!skillToDelete) return;
-
     try {
       await deleteSkill(skillToDelete).unwrap();
       toast.success('Skill deleted successfully');
@@ -59,19 +65,9 @@ export default function SkillsPage() {
     }
   };
 
-  if (isLoading) {
+  if (isLoadingAll) {
     return <Loading fullScreen text='Loading skills...' />;
   }
-
-  // Group skills by category
-  // const skillsByCategory = skills.reduce((acc, skill) => {
-  //   const category = skill.category || 'Uncategorized';
-  //   if (!acc[category]) {
-  //     acc[category] = [];
-  //   }
-  //   acc[category].push(skill);
-  //   return acc;
-  // }, {} as Record<string, typeof skills>);
 
   return (
     <div className='container py-6 space-y-6'>
@@ -84,35 +80,104 @@ export default function SkillsPage() {
 
       <Separator />
 
-      {skills.length === 0 ? (
-        <EmptyState
-          title='No skills found'
-          description='Get started by creating your first skill'
-          action={{
-            label: 'Add Skill',
-            onClick: handleCreateClick,
-          }}
-        />
-      ) : (
-        <div className='space-y-8'>
-          {/* {Object.entries(skillsByCategory).map(
-            ([category, categorySkills]) => (
-              <div key={category} className='space-y-4'>
-                <h2 className='text-xl font-semibold'>{category}</h2>
+      <Tabs
+        value={activeCategory}
+        onValueChange={setActiveCategory}
+        className='w-full'
+      >
+        <TabsList className='mb-4'>
+          <TabsTrigger value='all'>All</TabsTrigger>
+          {categories.map((cat: SkillCategory) => (
+            <TabsTrigger key={cat.id} value={cat.id}>
+              {cat.name}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+        {/* All Skills Tab */}
+        <TabsContent value='all' className='space-y-8'>
+          {isLoadingAll || isLoadingCategories ? (
+            <Loading fullScreen text='Loading skills...' />
+          ) : allSkills.length === 0 ? (
+            <EmptyState
+              title='No skills found'
+              description='Get started by creating your first skill'
+              action={{
+                label: 'Add Skill',
+                onClick: handleCreateClick,
+              }}
+            />
+          ) : (
+            <div className='grid gap-6 md:grid-cols-2 lg:grid-cols-3'>
+              {allSkills.map((skill) => (
+                <Card key={skill.id} className='flex flex-col'>
+                  <CardHeader>
+                    <div className='flex justify-between items-start'>
+                      <CardTitle>{skill.name}</CardTitle>
+                      <Badge variant='outline'>{skill.proficiency}%</Badge>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className='w-full bg-gray-200 rounded-full h-2.5'>
+                      <div
+                        className='bg-blue-600 h-2.5 rounded-full'
+                        style={{ width: `${skill.proficiency}%` }}
+                      ></div>
+                    </div>
+                  </CardContent>
+                  <CardFooter className='flex justify-end space-x-2 mt-auto'>
+                    <Button
+                      variant='outline'
+                      size='sm'
+                      onClick={() => handleEditClick(skill.id)}
+                    >
+                      <Pencil className='h-4 w-4' />
+                    </Button>
+                    <Button
+                      variant='outline'
+                      size='sm'
+                      onClick={() => handleDeleteClick(skill.id)}
+                    >
+                      <Trash2 className='h-4 w-4' />
+                    </Button>
+                  </CardFooter>
+                </Card>
+              ))}
+            </div>
+          )}
+        </TabsContent>
+        {/* Category Tabs */}
+        {categories.map((cat) => {
+          const filteredSkills = allSkills.filter(
+            (skill) => skill.categoryId === cat.id
+          );
+          return (
+            <TabsContent key={cat.id} value={cat.id} className='space-y-8'>
+              {isLoadingAll || isLoadingCategories ? (
+                <Loading fullScreen text='Loading skills...' />
+              ) : filteredSkills.length === 0 ? (
+                <EmptyState
+                  title='No skills found'
+                  description='Get started by creating your first skill'
+                  action={{
+                    label: 'Add Skill',
+                    onClick: handleCreateClick,
+                  }}
+                />
+              ) : (
                 <div className='grid gap-6 md:grid-cols-2 lg:grid-cols-3'>
-                  {categorySkills.map((skill) => (
+                  {filteredSkills.map((skill) => (
                     <Card key={skill.id} className='flex flex-col'>
                       <CardHeader>
                         <div className='flex justify-between items-start'>
                           <CardTitle>{skill.name}</CardTitle>
-                          <Badge variant='outline'>{skill.level}%</Badge>
+                          <Badge variant='outline'>{skill.proficiency}%</Badge>
                         </div>
                       </CardHeader>
                       <CardContent>
                         <div className='w-full bg-gray-200 rounded-full h-2.5'>
                           <div
                             className='bg-blue-600 h-2.5 rounded-full'
-                            style={{ width: `${skill.level}%` }}
+                            style={{ width: `${skill.proficiency}%` }}
                           ></div>
                         </div>
                       </CardContent>
@@ -135,47 +200,11 @@ export default function SkillsPage() {
                     </Card>
                   ))}
                 </div>
-              </div>
-            )
-          )} */}
-          <div className='grid gap-6 md:grid-cols-2 lg:grid-cols-3'>
-            {skills.map((skill) => (
-              <Card key={skill.id} className='flex flex-col'>
-                <CardHeader>
-                  <div className='flex justify-between items-start'>
-                    <CardTitle>{skill.name}</CardTitle>
-                    <Badge variant='outline'>{skill.proficiency}%</Badge>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className='w-full bg-gray-200 rounded-full h-2.5'>
-                    <div
-                      className='bg-blue-600 h-2.5 rounded-full'
-                      style={{ width: `${skill.proficiency}%` }}
-                    ></div>
-                  </div>
-                </CardContent>
-                <CardFooter className='flex justify-end space-x-2 mt-auto'>
-                  <Button
-                    variant='outline'
-                    size='sm'
-                    onClick={() => handleEditClick(skill.id)}
-                  >
-                    <Pencil className='h-4 w-4' />
-                  </Button>
-                  <Button
-                    variant='outline'
-                    size='sm'
-                    onClick={() => handleDeleteClick(skill.id)}
-                  >
-                    <Trash2 className='h-4 w-4' />
-                  </Button>
-                </CardFooter>
-              </Card>
-            ))}
-          </div>
-        </div>
-      )}
+              )}
+            </TabsContent>
+          );
+        })}
+      </Tabs>
 
       <DeleteConfirmationDialog
         isOpen={deleteDialogOpen}

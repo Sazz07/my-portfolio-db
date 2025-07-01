@@ -4,6 +4,7 @@ import { baseApi } from '../../api/baseApi';
 export type Skill = {
   id: string;
   name: string;
+  categoryId: string;
   proficiency: number;
   profileId: string;
   createdAt: string;
@@ -18,6 +19,11 @@ export type CreateSkillPayload = {
 
 export type UpdateSkillPayload = Partial<CreateSkillPayload> & {
   id: string;
+};
+
+export type SkillCategory = {
+  id: string;
+  name: string;
 };
 
 export const skillBaseApi = baseApi.injectEndpoints({
@@ -55,6 +61,20 @@ export const skillBaseApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ['Skill'],
     }),
+    getSkillCategories: builder.query<SkillCategory[], void>({
+      query: () => '/skill-categories',
+      transformResponse: (response: TResponseRedux<SkillCategory[]>) =>
+        response.data || [],
+      providesTags: ['Skill'],
+    }),
+    createSkillCategory: builder.mutation<SkillCategory, { name: string }>({
+      query: (category) => ({
+        url: '/skill-categories',
+        method: 'POST',
+        body: category,
+      }),
+      invalidatesTags: ['Skill'],
+    }),
   }),
 });
 
@@ -64,4 +84,6 @@ export const {
   useCreateSkillMutation,
   useUpdateSkillMutation,
   useDeleteSkillMutation,
+  useGetSkillCategoriesQuery,
+  useCreateSkillCategoryMutation,
 } = skillBaseApi;
