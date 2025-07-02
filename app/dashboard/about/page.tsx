@@ -25,7 +25,7 @@ export default function AboutPage() {
 
   const handleEditClick = () => {
     if (about) {
-      router.push(`/dashboard/about/edit/${about.id}`);
+      router.push(`/dashboard/about/edit/${about?.data?.id}`);
     } else {
       toast.error('About section not found');
     }
@@ -40,12 +40,11 @@ export default function AboutPage() {
       <EmptyState
         title='No About Information'
         description="You haven't added any about information yet. Create one to showcase your skills and experience."
-        // action={
-        //   <Button onClick={handleCreateClick}>
-        //     <Plus className="mr-2 h-4 w-4" />
-        //     Create About
-        //   </Button>
-        // }
+        action={{
+          label: 'Create About',
+          onClick: handleCreateClick,
+          icon: <Plus className='size-4' />,
+        }}
       />
     );
   }
@@ -71,31 +70,54 @@ export default function AboutPage() {
             <CardContent className='pt-6'>
               <div className='grid gap-6 md:grid-cols-2'>
                 <div>
-                  <h2 className='text-xl font-semibold mb-2'>{about.title}</h2>
+                  <h2 className='text-xl font-semibold mb-2'>Journey</h2>
                   <div
-                    className='text-muted-foreground'
-                    dangerouslySetInnerHTML={{ __html: about.description }}
+                    className='text-muted-foreground mb-4'
+                    dangerouslySetInnerHTML={{ __html: about?.data?.journey }}
                   />
-                  {about.resumeUrl && (
-                    <div className='mt-4'>
-                      <a
-                        href={about.resumeUrl}
-                        target='_blank'
-                        rel='noopener noreferrer'
-                        className='flex items-center text-primary hover:underline'
-                      >
-                        <FileText className='mr-2 h-4 w-4' />
-                        View Resume
-                      </a>
+                  <h2 className='text-xl font-semibold mb-2'>Values</h2>
+                  <div
+                    className='text-muted-foreground mb-4'
+                    dangerouslySetInnerHTML={{ __html: about?.data?.values }}
+                  />
+                  <h2 className='text-xl font-semibold mb-2'>Approach</h2>
+                  <div
+                    className='text-muted-foreground mb-4'
+                    dangerouslySetInnerHTML={{ __html: about?.data?.approach }}
+                  />
+                  <h2 className='text-xl font-semibold mb-2'>Beyond Coding</h2>
+                  <div
+                    className='text-muted-foreground mb-4'
+                    dangerouslySetInnerHTML={{
+                      __html: about?.data?.beyondCoding,
+                    }}
+                  />
+                  <h2 className='text-xl font-semibold mb-2'>
+                    Looking Forward
+                  </h2>
+                  <div
+                    className='text-muted-foreground mb-4'
+                    dangerouslySetInnerHTML={{
+                      __html: about?.data?.lookingForward,
+                    }}
+                  />
+                  {about?.data?.metaTitle && (
+                    <div className='mt-2 text-xs text-gray-400'>
+                      Meta Title: {about?.data?.metaTitle}
+                    </div>
+                  )}
+                  {about?.data?.metaDescription && (
+                    <div className='mt-1 text-xs text-gray-400'>
+                      Meta Description: {about?.data?.metaDescription}
                     </div>
                   )}
                 </div>
-                {about.image && (
+                {about?.data?.image && (
                   <div className='flex justify-center md:justify-end'>
                     <div className='relative h-64 w-64 overflow-hidden rounded-lg'>
                       <Image
-                        src={about.image}
-                        alt={about.title}
+                        src={about?.data?.image}
+                        alt='About Image'
                         fill
                         className='object-cover'
                       />

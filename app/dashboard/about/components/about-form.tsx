@@ -20,10 +20,14 @@ import {
 } from '@/lib/redux/features/about/aboutApiSlice';
 
 const formSchema = z.object({
-  title: z.string().min(1, 'Title is required'),
-  description: z.string().min(1, 'Description is required'),
-  image: z.string().optional(),
-  resumeUrl: z.string().url('Must be a valid URL').optional().or(z.literal('')),
+  journey: z.string().min(1, 'Journey is required'),
+  values: z.string().min(1, 'Values are required'),
+  approach: z.string().min(1, 'Approach is required'),
+  beyondCoding: z.string().min(1, 'Beyond coding is required'),
+  lookingForward: z.string().min(1, 'Looking forward is required'),
+  metaTitle: z.string().optional(),
+  metaDescription: z.string().optional(),
+  image: z.union([z.string(), z.instanceof(File)]).optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -43,37 +47,40 @@ export function AboutForm({ about }: AboutFormProps) {
   const isEditing = !!about;
 
   const defaultValues: FormValues = {
-    title: about?.title || '',
-    description: about?.description || '',
-    image: about?.image || '',
-    resumeUrl: about?.resumeUrl || '',
+    journey: about?.data?.journey || '',
+    values: about?.data?.values || '',
+    approach: about?.data?.approach || '',
+    beyondCoding: about?.data?.beyondCoding || '',
+    lookingForward: about?.data?.lookingForward || '',
+    metaTitle: about?.data?.metaTitle || '',
+    metaDescription: about?.data?.metaDescription || '',
+    image: about?.data?.image || '',
   };
 
   const onSubmit = async (values: FormValues) => {
     try {
       const formData = new FormData();
-      formData.append('title', values.title);
-      formData.append('description', values.description);
-
-      if (values.resumeUrl) {
-        formData.append('resumeUrl', values.resumeUrl);
-      }
-
+      formData.append('journey', values.journey);
+      formData.append('values', values.values);
+      formData.append('approach', values.approach);
+      formData.append('beyondCoding', values.beyondCoding);
+      formData.append('lookingForward', values.lookingForward);
+      if (values.metaTitle) formData.append('metaTitle', values.metaTitle);
+      if (values.metaDescription)
+        formData.append('metaDescription', values.metaDescription);
       if (selectedImage) {
         formData.append('image', selectedImage);
       } else if (values.image) {
         formData.append('image', values.image);
       }
-
       if (isEditing && about) {
-        formData.append('id', about.id);
+        formData.append('id', about?.data?.id);
         await updateAbout(formData).unwrap();
         toast.success('About information updated successfully');
       } else {
         await createAbout(formData).unwrap();
         toast.success('About information created successfully');
       }
-
       router.push('/dashboard/about');
     } catch {
       toast.error(
@@ -93,37 +100,41 @@ export function AboutForm({ about }: AboutFormProps) {
       schema={formSchema}
       defaultValues={defaultValues}
       onSubmit={onSubmit}
-      className='space-y-6'
+      className='space-y-6 max-w-2xl mx-auto bg-white dark:bg-slate-900 p-8 rounded-lg shadow'
     >
-      <FormInput
-        name='title'
-        label='Title'
-        placeholder='e.g. Full Stack Developer'
-        disabled={isLoading}
-      />
-
+      <FormRichEditor name='journey' label='Journey' disabled={isLoading} />
+      <FormRichEditor name='values' label='Values' disabled={isLoading} />
+      <FormRichEditor name='approach' label='Approach' disabled={isLoading} />
       <FormRichEditor
-        name='description'
-        label='Description'
+        name='beyondCoding'
+        label='Beyond Coding'
         disabled={isLoading}
       />
-
+      <FormRichEditor
+        name='lookingForward'
+        label='Looking Forward'
+        disabled={isLoading}
+      />
+      <FormInput
+        name='metaTitle'
+        label='Meta Title'
+        placeholder='SEO meta title (optional)'
+        disabled={isLoading}
+      />
+      <FormInput
+        name='metaDescription'
+        label='Meta Description'
+        placeholder='SEO meta description (optional)'
+        disabled={isLoading}
+      />
       <FormImageUpload
         name='image'
         label='Profile Image'
         disabled={isLoading}
         onFileChange={handleImageChange}
-        existingImage={about?.image}
+        existingImage={about?.data?.image}
       />
-
-      <FormInput
-        name='resumeUrl'
-        label='Resume URL'
-        placeholder='https://example.com/resume.pdf'
-        disabled={isLoading}
-      />
-
-      <div className='flex justify-end space-x-2'>
+      <div className='flex justify-end space-x-2 pt-4'>
         <Button
           type='button'
           variant='outline'

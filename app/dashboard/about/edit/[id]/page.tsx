@@ -10,16 +10,16 @@ export default function EditAboutPage() {
   const { data: about, isLoading } = useGetAboutQuery();
 
   if (isLoading) {
-    return <Loading fullScreen text="Loading about information..." />;
+    return <Loading fullScreen text='Loading about information...' />;
   }
 
-  if (!about || about.id !== id) {
+  if (!about || about?.data?.id !== id) {
     return <div>About information not found</div>;
   }
 
   return (
-    <div className="container py-6 space-y-6">
-      <h1 className="text-3xl font-bold">Edit About</h1>
+    <div className='container py-6 space-y-6'>
+      <h1 className='text-3xl font-bold'>Edit About</h1>
       <AboutForm about={about} />
     </div>
   );

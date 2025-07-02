@@ -11,22 +11,32 @@ export type Quote = {
 };
 
 export type About = {
-  id: string;
-  title: string;
-  description: string;
-  image?: string;
-  resumeUrl?: string;
-  userId: string;
-  createdAt: string;
-  updatedAt: string;
-  quotes?: Quote[];
+  data: {
+    id: string;
+    journey: string;
+    values: string;
+    approach: string;
+    beyondCoding: string;
+    lookingForward: string;
+    metaTitle?: string;
+    metaDescription?: string;
+    image?: string;
+    userId: string;
+    createdAt: string;
+    updatedAt: string;
+    quotes?: Quote[];
+  };
 };
 
 export type CreateAboutPayload = {
-  title: string;
-  description: string;
+  journey: string;
+  values: string;
+  approach: string;
+  beyondCoding: string;
+  lookingForward: string;
+  metaTitle?: string;
+  metaDescription?: string;
   image?: string;
-  resumeUrl?: string;
 };
 
 export type UpdateAboutPayload = Partial<CreateAboutPayload> & {
@@ -46,7 +56,7 @@ export type UpdateQuotePayload = Partial<CreateQuotePayload> & {
 export const aboutApiSlice = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getAbout: builder.query<About, void>({
-      query: () => '/about',
+      query: () => '/about/me',
       providesTags: ['About'],
     }),
     createAbout: builder.mutation<About, FormData>({
