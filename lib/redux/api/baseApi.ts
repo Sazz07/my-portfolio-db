@@ -97,6 +97,7 @@ export const baseApi = createApi({
     'Technology',
     'Blog-Category',
     'Quotes',
+    'Profile',
   ],
   endpoints: () => ({}),
 });
